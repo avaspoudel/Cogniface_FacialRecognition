@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "C:\\Users\\aavas\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "runtimeArgs": ["-m", "http.server", "5500", "--directory", "frontend"],
+      "port": 5500
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:\\Users\\aavas\\Downloads\\facial-recognition-api\\venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "main:app", "--app-dir", "backend", "--reload", "--port", "8000"],
+      "port": 8000
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Facial Recognition Attendance</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>Facial Recognition Attendance</h1>
+  <div class="api-config">
+    <label for="apiBase">API base URL</label>
+    <input id="apiBase" type="text" value="http://127.0.0.1:8000" />
+    <span id="healthDot" class="dot" title="API status"></span>
+  </div>
+</header>
+
+<nav id="tabs">
+  <button class="tab-btn active" data-tab="students">Students &amp; Classes</button>
+  <button class="tab-btn" data-tab="register">Face Registration</button>
+  <button class="tab-btn" data-tab="attendance">Attendance Session</button>
+  <button class="tab-btn" data-tab="reports">Reports</button>
+</nav>
+
+<main>
+  <!-- STUDENTS & CLASSES -->
+  <section id="students" class="tab-panel active">
+    <div class="grid2">
+      <div class="card">
+        <h2>Add Student</h2>
+        <form id="studentForm">
+          <label>Student ID <input name="student_id" required placeholder="S001" /></label>
+          <label>Name <input name="name" required placeholder="Aavash Poudel" /></label>
+          <label>Email <input name="email" type="email" placeholder="optional" /></label>
+          <button type="submit">Create Student</button>
+        </form>
+        <div id="studentMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Add Class</h2>
+        <form id="classForm">
+          <label>Class ID <input name="class_id" required placeholder="C001" /></label>
+          <label>Class Name <input name="class_name" required placeholder="Databases" /></label>
+          <label>Lecturer ID <input name="lecturer_id" required placeholder="L001" /></label>
+          <label>Start Time <input name="start_time" type="time" required /></label>
+          <label>End Time <input name="end_time" type="time" required /></label>
+          <button type="submit">Create Class</button>
+        </form>
+        <div id="classMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Enroll Student in Class</h2>
+        <form id="enrollForm">
+          <label>Class ID <input name="class_id" required placeholder="C001" /></label>
+          <label>Student ID <input name="student_id" required placeholder="S001" /></label>
+          <button type="submit">Enroll</button>
+        </form>
+        <div id="enrollMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Students</h2>
+        <button id="refreshStudents" type="button">Refresh</button>
+        <table id="studentsTable">
+          <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Face registered</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FACE REGISTRATION -->
+  <section id="register" class="tab-panel">
+    <div class="card">
+      <h2>Register a Face</h2>
+      <p class="hint">Requires at least 15 captured photos of the student's face. Start the camera, position the face, and capture shots from a few different angles.</p>
+      <label>Student ID <input id="regStudentId" required placeholder="S001" /></label>
+
+      <div class="camera-row">
+        <video id="regVideo" autoplay playsinline muted></video>
+        <canvas id="regCanvas" class="hidden"></canvas>
+        <div class="camera-controls">
+          <button id="regStartCam" type="button">Start Camera</button>
+          <button id="regCapture" type="button" disabled>Capture Photo</button>
+          <button id="regClear" type="button">Clear Captures</button>
+          <div class="count">Captured: <span id="regCount">0</span> / 15 min</div>
+          <button id="regSubmit" type="button" disabled>Submit Registration</button>
+        </div>
+      </div>
+
+      <div id="regThumbs" class="thumbs"></div>
+      <div id="regMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Check Registration Status</h2>
+      <label>Student ID <input id="statusStudentId" placeholder="S001" /></label>
+      <button id="statusCheck" type="button">Check</button>
+      <div id="statusMsg" class="msg"></div>
+    </div>
+  </section>
+
+  <!-- ATTENDANCE SESSION -->
+  <section id="attendance" class="tab-panel">
+    <div class="card">
+      <h2>Start Session</h2>
+      <form id="sessionForm">
+        <label>Class ID <input name="class_id" required placeholder="C001" /></label>
+        <label>Lecturer ID <input name="lecturer_id" required placeholder="L001" /></label>
+        <label class="checkbox"><input name="enforce_class_time" type="checkbox" /> Enforce class time window</label>
+        <button type="submit">Start Session</button>
+      </form>
+      <div id="sessionMsg" class="msg"></div>
+    </div>
+
+    <div class="card" id="liveCard" style="display:none">
+      <h2>Live Recognition &mdash; Session <span id="activeSessionId"></span></h2>
+      <div class="camera-row">
+        <video id="attVideo" autoplay playsinline muted></video>
+        <canvas id="attCanvas" class="hidden"></canvas>
+        <div class="camera-controls">
+          <button id="attStartCam" type="button">Start Camera</button>
+          <button id="attToggleLoop" type="button" disabled>Start Auto-Recognition</button>
+          <button id="attSendOnce" type="button" disabled>Send One Frame</button>
+          <label>Interval (ms) <input id="attInterval" type="number" value="2000" min="500" step="250" style="width:80px" /></label>
+        </div>
+      </div>
+      <div id="recognizedList"></div>
+
+      <h3>Session Summary</h3>
+      <button id="refreshSession" type="button">Refresh Status</button>
+      <table id="sessionTable">
+        <thead><tr><th>Student</th><th>Status</th><th>Method</th><th>Confidence</th><th>Time</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="close-row">
+        <label>Closed by (Lecturer ID) <input id="closeMarkedBy" placeholder="L001" /></label>
+        <button id="closeSession" type="button">Close Session</button>
+      </div>
+      <div id="closeMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Manual Attendance Marking</h2>
+      <form id="manualForm">
+        <label>Session ID <input name="session_id" required placeholder="from Start Session above" /></label>
+        <label>Student ID <input name="student_id" required placeholder="S001" /></label>
+        <label>Status
+          <select name="status">
+            <option>Present</option>
+            <option>Late</option>
+            <option>Absent</option>
+          </select>
+        </label>
+        <label>Marked by (Lecturer ID) <input name="marked_by" required placeholder="L001" /></label>
+        <button type="submit">Update Attendance</button>
+      </form>
+      <div id="manualMsg" class="msg"></div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="reports" class="tab-panel">
+    <div class="grid2">
+      <div class="card">
+        <h2>Student Attendance</h2>
+        <label>Student ID <input id="repStudentId" placeholder="S001" /></label>
+        <button id="repStudentBtn" type="button">View</button>
+        <div id="repStudentOut" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Class Report</h2>
+        <label>Class ID <input id="repClassId" placeholder="C001" /></label>
+        <button id="repClassBtn" type="button">View</button>
+        <div id="repClassOut" class="msg"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
