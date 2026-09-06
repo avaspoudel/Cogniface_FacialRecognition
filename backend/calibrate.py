@@ -2,14 +2,10 @@
 calibrate.py
 
 Utility to help you pick (and justify, in your NFR-3 test evidence) a
-real recognition threshold instead of trusting the pseudocode's 0.85
-default blindly.
+real Euclidean-distance recognition threshold.
 
-`face_recognition`'s embeddings are tuned for *Euclidean* distance, not
-cosine similarity, so the right cosine cutoff isn't obvious up front --
-it depends on your camera, lighting, and how the 15 registration shots
-are captured. This script measures both metrics on your own images so
-you can defend whatever number you put in the report.
+The correct cutoff depends on the camera, lighting, and registration
+images. This script measures dlib's native Euclidean distance.
 
 Usage:
     python calibrate.py genuine_dir/ impostor_dir/
@@ -19,7 +15,7 @@ Where:
                    (e.g. different angles from one registration session)
     impostor_dir/  contains one photo each of several DIFFERENT people
 
-It prints the min/mean/max cosine similarity and Euclidean distance for:
+It prints the min/mean/max Euclidean distance for:
     - "genuine" pairs   (same person compared to themselves)
     - "impostor" pairs  (that person compared to everyone else)
 
@@ -77,31 +73,24 @@ def main():
         print("Need at least 1 impostor image. Aborting.")
         sys.exit(1)
 
-    genuine_cos, genuine_eucl = [], []
+    genuine_eucl = []
     for i in range(len(genuine_embeddings)):
         for j in range(i + 1, len(genuine_embeddings)):
-            genuine_cos.append(fe.cosine_similarity(genuine_embeddings[i], genuine_embeddings[j]))
             genuine_eucl.append(fe.euclidean_distance(genuine_embeddings[i], genuine_embeddings[j]))
 
-    impostor_cos, impostor_eucl = [], []
+    impostor_eucl = []
     reference = genuine_embeddings[0]
     for emb in impostor_embeddings:
-        impostor_cos.append(fe.cosine_similarity(reference, emb))
         impostor_eucl.append(fe.euclidean_distance(reference, emb))
 
     def report(name, values):
         print(f"  {name}: min={min(values):.4f} mean={mean(values):.4f} max={max(values):.4f}")
 
-    print("\n=== Cosine similarity (higher = more similar) ===")
-    report("genuine pairs ", genuine_cos)
-    report("impostor pairs", impostor_cos)
-    suggested = (min(genuine_cos) + max(impostor_cos)) / 2
-    print(f"  -> suggested cosine threshold (midpoint of the gap): {suggested:.4f}")
-    print(f"     (current RECOGNITION_THRESHOLD in face_engine.py is {fe.RECOGNITION_THRESHOLD})")
-
     print("\n=== Euclidean distance (lower = more similar) ===")
     report("genuine pairs ", genuine_eucl)
     report("impostor pairs", impostor_eucl)
+    suggested = (max(genuine_eucl) + min(impostor_eucl)) / 2
+    print(f"  -> suggested FACE_MATCH_MAX_DISTANCE: {suggested:.4f}")
     print("  (dlib's typical rule of thumb: distance < 0.6 = same person)")
 
 
