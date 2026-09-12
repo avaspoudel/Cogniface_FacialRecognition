@@ -1,9 +1,2 @@
-venv/
-__pycache__/
-*.pyc
-backend/storage/attendance.db
-backend/storage/encryption.key
-backend/storage/face_images/*
-!backend/storage/face_images/.gitkeep
-.pytest_cache/
 .env
+.venv/
